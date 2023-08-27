@@ -5,3 +5,6 @@ Unifi API CLI developed in Rust.
 Copy unifiers.toml.sample to unifiers.toml and change your settings.
 
 Only support changing port profile up and down for the moment.
+
+Usage:
+# ./unifiers --port-number 9 --up
