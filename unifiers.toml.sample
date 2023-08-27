@@ -1,0 +1,6 @@
+base_url="https://127.0.0.1:3000"
+login="mylogin"
+password="mypassword"
+device_id="486555b4c3df8300120ad364"
+port_profile_up="6263dec9fadf8300220bd18b"
+port_profile_down="6263dec9fadf8300220bd18c"
