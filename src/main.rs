@@ -16,6 +16,8 @@ struct UnifiApi<'a> {
     login: &'a str,
     password: &'a str,
     client: reqwest::blocking::Client,
+    port_enable_profile_id: String,
+    port_disable_profile_id: String,
 }
 
 // {
@@ -41,9 +43,6 @@ struct PortOverride<'a> {
     autoneg: bool,
     port_security_enabled: bool,
 }
-
-static PORT_CONF_ID_ENABLE: &str = "6263dec9fadf8300220bd18b";
-static PORT_CONF_ID_DISABLE: &str = "6263dec9fadf8300220bd18c";
 
 // #[derive(Serialize)]
 // #[serde(untagged)]
@@ -102,6 +101,8 @@ impl UnifiApi<'_> {
             login,
             password,
             client,
+            port_disable_profile_id: "".to_owned(),
+            port_enable_profile_id: "".to_owned(),
         })
     }
 
@@ -154,12 +155,20 @@ impl UnifiApi<'_> {
         }
     }
 
+    pub fn set_port_enable_profile_id(&mut self, port_enable_profile_id: String) {
+        self.port_enable_profile_id = port_enable_profile_id
+    }
+
+    pub fn set_port_disable_profile_id(&mut self, port_disable_profile_id: String) {
+        self.port_disable_profile_id = port_disable_profile_id
+    }
+
     pub fn disable_port(&self, device_id: &str, port_number: i32) -> Result<()> {
-        self.change_port_settings(device_id, port_number, PORT_CONF_ID_DISABLE)
+        self.change_port_settings(device_id, port_number, &self.port_disable_profile_id)
     }
 
     pub fn enable_port(&self, device_id: &str, port_number: i32) -> Result<()> {
-        self.change_port_settings(device_id, port_number, PORT_CONF_ID_ENABLE)
+        self.change_port_settings(device_id, port_number, &self.port_enable_profile_id)
     }
 }
 
@@ -201,8 +210,16 @@ fn main() -> Result<()> {
     let device_id = settings
         .get("device_id")
         .ok_or(anyhow!("can't find device_id setting"))?;
+    let port_profile_down = settings
+        .get("port_profile_down")
+        .ok_or(anyhow!("can't find device_id setting"))?;
+    let port_profile_up: &String = settings
+        .get("port_profile_up")
+        .ok_or(anyhow!("can't find device_id setting"))?;
 
-    let api = UnifiApi::new(base_url, login, password)?;
+    let mut api = UnifiApi::new(base_url, login, password)?;
+    api.set_port_disable_profile_id(port_profile_down.to_string());
+    api.set_port_enable_profile_id(port_profile_up.to_string());
 
     if args.port_number > 0 {
         return match args.profile {
