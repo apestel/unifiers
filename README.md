@@ -7,7 +7,7 @@ Copy unifiers.toml.sample to unifiers.toml and change your settings.
 Only support changing port profile up and down for the moment.
 
 ```
-\# ./unifiers --help
+# ./unifiers --help
 Usage: unifiers --config-file-path <CONFIG_FILE_PATH> --port-number <PORT_NUMBER> <PROFILE>
 
 Arguments:
