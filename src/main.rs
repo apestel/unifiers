@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Ok, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 //use clap;
 use reqwest::{self};
 use thiserror::Error;
@@ -163,23 +163,30 @@ impl UnifiApi<'_> {
     }
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum PortProfile {
+    Up,
+    Down,
+}
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+    #[arg(short, long)]
+    config_file_path: String,
     /// Port number to change profile
     #[arg(short, long)]
     port_number: i32,
 
-    /// Port Up?
-    #[arg(short, long, default_value = "true")]
-    up: bool,
+    #[arg(value_enum)]
+    profile: PortProfile,
 }
 
 fn main() -> Result<()> {
     env_logger::init();
+    let args = Args::parse();
 
     let settings = Config::builder()
-        .add_source(config::File::with_name("unifiers.toml"))
+        .add_source(config::File::with_name(&args.config_file_path))
         .build()?;
     let settings = settings.try_deserialize::<HashMap<String, String>>()?;
     let base_url = settings
@@ -197,12 +204,11 @@ fn main() -> Result<()> {
 
     let api = UnifiApi::new(base_url, login, password)?;
 
-    let args = Args::parse();
-    if args.port_number > 0 && args.up {
-        api.enable_port(device_id, args.port_number)?;
-    } else if args.port_number > 0 && !args.up {
-        api.disable_port(device_id, args.port_number)?;
+    if args.port_number > 0 {
+        return match args.profile {
+            PortProfile::Up => api.enable_port(device_id, args.port_number),
+            PortProfile::Down => api.disable_port(device_id, args.port_number),
+        };
     }
-
     Ok(())
 }
